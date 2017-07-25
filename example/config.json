@@ -6,7 +6,7 @@
   ],
 
   "queries": [
-     {"name":"bidding01", "frequency":1, "parallel":60, "query": "SELECT advertiser_id, tracking_id FROM bidder_views_0_5.bidder_advertiser;"}
+     {"name":"bidding01", "frequency":1, "parallel":60, "count": 5, "query": "SELECT advertiser_id, tracking_id FROM bidder_views_0_5.bidder_advertiser;"}
   ],
   "db": "postgres://user:password@host:5432/database?sslmode=require",
   "logs": {
