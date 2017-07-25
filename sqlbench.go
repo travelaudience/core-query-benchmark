@@ -1,3 +1,6 @@
+/*
+Package sqlbench can run a set of queries against a postgresql database and collect execution statistics.
+*/
 package sqlbench
 
 // Config specifies the setup for benchmarks
