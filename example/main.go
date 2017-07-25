@@ -9,7 +9,8 @@ func main() {
 	if e != nil {
 		log.Fatal(e)
 	}
-	w := b.Start()
-	<-w
+	wait := b.Start()
+	<-wait
+
 	fmt.Println("Finished")
 }
