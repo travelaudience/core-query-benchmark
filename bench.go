@@ -157,11 +157,11 @@ func (b *Bench) save() {
 			var line []string
 			line = append(line, tags...)
 			line = append(line, k)
-			line = append(line, strconv.FormatFloat(v.Min, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Avg, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Max, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Pct95, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Min, 'f', 0, 64))
+			line = append(line, strconv.FormatFloat(v.Avg, 'f', 0, 64))
+			line = append(line, strconv.FormatFloat(v.Max, 'f', 0, 64))
+			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 0, 64))
+			line = append(line, strconv.FormatFloat(v.Pct95, 'f', 0, 64))
 			w.Write(line)
 		}
 

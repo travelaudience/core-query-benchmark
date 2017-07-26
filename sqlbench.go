@@ -17,8 +17,8 @@ func New(configFile string) (Bench, error) {
 	}
 
 	b.runner = &sqlRunner{dsn: b.config.Db}
-	b.runner.init()
-	return b, nil
+	err = b.runner.init()
+	return b, err
 }
 
 func config(fn string) (Config, error) {
