@@ -1,9 +1,12 @@
 package sqlbench
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -70,7 +73,10 @@ func (b *Bench) benchmarkQuery(q Query) {
 				all.Add(1)
 				go func() {
 					t := time.Now().UnixNano()
-					b.run(q.Query)
+					err := b.run(q.Query)
+					if err != nil {
+						log.Println(err)
+					}
 					runTime <- float64(time.Now().UnixNano()-t) / 1000000
 					all.Done()
 				}()
@@ -119,11 +125,41 @@ func std(r []float64, avg float64, n float64) float64 {
 }
 
 func (b *Bench) save() {
-	fmt.Println(b.runLog)
 	if b.config.Logs.Csv != "" {
-		fmt.Println("saving into", b.config.Logs.Csv)
-	}
-	if b.config.Logs.Datadog != "" {
-		fmt.Println("send data to", b.config.Logs.Datadog)
+		var tags []string
+		var header []string
+		for _, t := range b.tags {
+			tags = append(tags, t.Value)
+			header = append(header, t.Name)
+		}
+
+		header = append(header, []string{"query", "Min", "Avg", "Max", "Stdv"}...)
+		var line []string
+		for k, v := range b.runLog.runs {
+			line = append(line, tags...)
+			line = append(line, k)
+			line = append(line, strconv.FormatFloat(v.Min, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Avg, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Max, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 8, 64))
+		}
+
+		fmt.Println("saving", line)
+		fmt.Println("into", b.config.Logs.Csv)
+
+		f, err := os.OpenFile(b.config.Logs.Csv, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer f.Close()
+
+		w := csv.NewWriter(f)
+		stat, _ := f.Stat()
+		if stat.Size() == 0 {
+			w.Write(header)
+		}
+		w.Write(line)
+
+		w.Flush()
 	}
 }

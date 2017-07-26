@@ -7,6 +7,7 @@ import (
 	"log"
 
 	// Adding postgres driver
+
 	_ "github.com/lib/pq"
 )
 
