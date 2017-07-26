@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 
@@ -8,8 +9,10 @@ import (
 )
 
 func main() {
+	config := flag.String("config", "example/config.json", "config file")
+	flag.Parse()
 
-	b, e := sqlbench.New("example/config.json")
+	b, e := sqlbench.New(*config)
 	if e != nil {
 		log.Fatal(e)
 	}

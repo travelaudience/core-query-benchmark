@@ -38,7 +38,7 @@ func (b *Bench) tag() {
 			tags = append(tags, Tag{b.config.Tags[i].Name, "test"})
 		}
 	}
-	b.log.tags = tags
+	b.runLog.tags = tags
 }
 
 func (b *Bench) benchmarkQuery(q Query) {
@@ -88,9 +88,9 @@ func (b *Bench) benchmarkQuery(q Query) {
 		case <-done:
 			fmt.Println(report)
 			b.Lock()
-			b.log.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n)}
+			b.runLog.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n)}
 			fmt.Println("results readt")
-			fmt.Println(b.log.runs[q.Name])
+			fmt.Println(b.runLog.runs[q.Name])
 			b.Unlock()
 			return
 		}
@@ -107,7 +107,7 @@ func std(r []float64, avg float64, n float64) float64 {
 }
 
 func (b *Bench) save() {
-	fmt.Println(b.log)
+	fmt.Println(b.runLog)
 	if b.config.Logs.Csv != "" {
 		fmt.Println("saving into", b.config.Logs.Csv)
 	}

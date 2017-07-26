@@ -49,7 +49,7 @@ type Bench struct {
 	config Config
 	wait   chan bool
 	runner
-	log
+	runLog
 	sync.Mutex
 }
 
@@ -60,7 +60,7 @@ type Stats struct {
 }
 
 // Log of total exection and also queries benchmarks
-type log struct {
+type runLog struct {
 	tags []Tag
 	runs map[string]Stats
 }

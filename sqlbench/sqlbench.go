@@ -24,7 +24,7 @@ func New(configFile string) (Bench, error) {
 // The returned channel can be used for waiting until benchmark is finish.
 func (b *Bench) Start() chan bool {
 	b.wait = make(chan bool)
-	b.log.runs = make(map[string]Stats)
+	b.runLog.runs = make(map[string]Stats)
 
 	go b.start()
 
