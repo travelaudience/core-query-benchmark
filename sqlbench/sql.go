@@ -6,7 +6,7 @@ import (
 
 	"log"
 
-	// Adding the postgres driver
+	// Adding postgres driver
 	_ "github.com/lib/pq"
 )
 
@@ -16,8 +16,6 @@ type sqlRunner struct {
 }
 
 func (s *sqlRunner) run(dsn string, q string) error {
-	// time.Sleep(time.Second)
-	// return nil
 	var err error
 	s.once.Do(func() {
 		println(dsn)
