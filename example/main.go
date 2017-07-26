@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/travelaudience/sqlbench"
+	"github.com/travelaudience/core-sqlbench/sqlbench"
 )
 
 func main() {
