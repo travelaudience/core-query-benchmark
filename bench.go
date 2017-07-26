@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -107,7 +108,7 @@ func (b *Bench) benchmarkQuery(q Query) {
 			n++
 		case <-done:
 			b.Lock()
-			b.runLog.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n)}
+			b.runLog.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n), pct(report, 95)}
 			b.Unlock()
 			fmt.Println("done", q.Name)
 			return
@@ -115,6 +116,11 @@ func (b *Bench) benchmarkQuery(q Query) {
 	}
 }
 
+func pct(r []float64, pct float64) float64 {
+	sort.Float64s(r)
+	k := math.Ceil(float64(len(r)) * pct / 100)
+	return r[int(k)]
+}
 func std(r []float64, avg float64, n float64) float64 {
 	var sum float64
 	for _, f := range r {
@@ -139,7 +145,7 @@ func (b *Bench) save() {
 			tags = append(tags, t.Value)
 			header = append(header, t.Name)
 		}
-		header = append(header, []string{"query", "Min", "Avg", "Max", "Stdv"}...)
+		header = append(header, []string{"query", "Min", "Avg", "Max", "Stdv", "Pct95"}...)
 
 		w := csv.NewWriter(f)
 		stat, _ := f.Stat()
@@ -155,6 +161,7 @@ func (b *Bench) save() {
 			line = append(line, strconv.FormatFloat(v.Avg, 'f', 8, 64))
 			line = append(line, strconv.FormatFloat(v.Max, 'f', 8, 64))
 			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Pct95, 'f', 8, 64))
 			w.Write(line)
 		}
 

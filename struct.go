@@ -58,7 +58,7 @@ type Bench struct {
 // Stats is collections data we collect for each query run
 type Stats struct {
 	// Minimum runtime
-	Min, Avg, Max, Stdv float64
+	Min, Avg, Max, Stdv, Pct95 float64
 }
 
 // Log of total exection and also queries benchmarks
