@@ -27,12 +27,16 @@ func (b *Bench) start() {
 	b.tag()
 
 	all := sync.WaitGroup{}
-	for _, q := range b.config.Queries {
+	fmt.Println(b.config.Queries)
+	for _, query := range b.config.Queries {
+		fmt.Println("saw:", query.Name)
+
 		all.Add(1)
-		go func() {
+		go func(q Query) {
+			fmt.Println("bench:", q.Name)
 			b.benchmarkQuery(q)
 			all.Done()
-		}()
+		}(query)
 	}
 	all.Wait()
 
