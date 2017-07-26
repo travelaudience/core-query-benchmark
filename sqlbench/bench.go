@@ -2,16 +2,26 @@ package sqlbench
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
 )
 
-func (b *Bench) start() error {
-	err := b.tag()
-	if err != nil {
-		return err
-	}
+// Start will started the benchmark and immediately returns.
+// The returned channel can be used for waiting until benchmark is finish.
+func (b *Bench) Start() chan bool {
+	b.wait = make(chan bool)
+	b.runLog.runs = make(map[string]Stats)
+
+	go b.start()
+
+	return b.wait
+}
+
+func (b *Bench) start() {
+	defer func() { b.wait <- true }()
+	b.tag()
 
 	all := sync.WaitGroup{}
 	for _, q := range b.config.Queries {
@@ -24,15 +34,9 @@ func (b *Bench) start() error {
 	all.Wait()
 
 	b.save()
-	// signal the end
-	go func() {
-		time.Sleep(time.Second)
-		b.wait <- true
-	}()
-	return nil
 }
 
-func (b *Bench) tag() error {
+func (b *Bench) tag() {
 	var tags []Tag
 	for i, t := range b.config.Tags {
 		switch {
@@ -41,15 +45,18 @@ func (b *Bench) tag() error {
 		default:
 			value, err := b.runner.tag(b.config.Tags[i].Value)
 			if err != nil {
-				return err
+				log.Println(err)
+				return
 			}
 			tags = append(tags, Tag{b.config.Tags[i].Name, value})
 		}
+		fmt.Println("Tag:", t.Name, ":", tags[i].Value)
 	}
 	b.runLog.tags = tags
 }
 
 func (b *Bench) benchmarkQuery(q Query) {
+	fmt.Println("running", q.Name)
 	var report []float64
 	runTime := make(chan float64)
 	done := make(chan bool)
@@ -58,7 +65,6 @@ func (b *Bench) benchmarkQuery(q Query) {
 	go func() {
 		ticker := time.NewTicker(time.Millisecond * time.Duration(q.Frequency))
 		for {
-			println("next")
 			all := sync.WaitGroup{}
 			for i := 0; i < q.Parallel; i++ {
 				all.Add(1)
@@ -94,12 +100,10 @@ func (b *Bench) benchmarkQuery(q Query) {
 			sum += r
 			n++
 		case <-done:
-			fmt.Println(report)
 			b.Lock()
 			b.runLog.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n)}
-			fmt.Println("results readt")
-			fmt.Println(b.runLog.runs[q.Name])
 			b.Unlock()
+			fmt.Println("done", q.Name)
 			return
 		}
 	}

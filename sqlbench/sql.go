@@ -16,34 +16,27 @@ type sqlRunner struct {
 	once sync.Once
 }
 
-func (s *sqlRunner) run(q string) error {
+func (s *sqlRunner) init() error {
 	var err error
-	s.once.Do(func() {
-		s.db, err = sql.Open("postgres", s.dsn)
-	})
+	s.db, err = sql.Open("postgres", s.dsn)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	_, err = s.db.Query(q)
+	return nil
+}
+
+func (s *sqlRunner) run(q string) error {
+	_, err := s.db.Query(q)
 	return err
 }
 
 func (s *sqlRunner) tag(q string) (string, error) {
-	var err error
-	s.once.Do(func() {
-		s.db, err = sql.Open("postgres", s.dsn)
-	})
-	if err != nil {
-		log.Println(err)
-		return "", err
-	}
-	id := 123
 	var value string
-	err = s.db.QueryRow(q, id).Scan(&value)
+	err := s.db.QueryRow(q).Scan(&value)
 
 	if err == sql.ErrNoRows || err != nil {
-		log.Printf("No results or err", err)
+		log.Println("No results or err", err, s.dsn)
 		return "", err
 	}
 	return value, nil

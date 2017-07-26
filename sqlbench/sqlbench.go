@@ -17,18 +17,8 @@ func New(configFile string) (Bench, error) {
 	}
 
 	b.runner = &sqlRunner{dsn: b.config.Db}
+	b.runner.init()
 	return b, nil
-}
-
-// Start will started the benchmark and immediately returns.
-// The returned channel can be used for waiting until benchmark is finish.
-func (b *Bench) Start() chan bool {
-	b.wait = make(chan bool)
-	b.runLog.runs = make(map[string]Stats)
-
-	go b.start()
-
-	return b.wait
 }
 
 func config(fn string) (Config, error) {
