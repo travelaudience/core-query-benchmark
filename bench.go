@@ -2,12 +2,13 @@ package sqlbench
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 )
 
 func (b *Bench) start() {
-	b.xTags()
+	b.tag()
 
 	all := sync.WaitGroup{}
 	for _, q := range b.config.Queries {
@@ -19,6 +20,7 @@ func (b *Bench) start() {
 	}
 	all.Wait()
 
+	b.save()
 	// signal the end
 	go func() {
 		time.Sleep(time.Second)
@@ -26,7 +28,7 @@ func (b *Bench) start() {
 	}()
 }
 
-func (b *Bench) xTags() {
+func (b *Bench) tag() {
 	var tags []Tag
 	for i, t := range b.config.Tags {
 		switch {
@@ -36,7 +38,7 @@ func (b *Bench) xTags() {
 			tags = append(tags, Tag{b.config.Tags[i].Name, "test"})
 		}
 	}
-	b.tags = tags
+	b.log.tags = tags
 }
 
 func (b *Bench) benchmarkQuery(q Query) {
@@ -70,15 +72,46 @@ func (b *Bench) benchmarkQuery(q Query) {
 		}
 	}()
 
+	var min, max, sum, n float64
 	for {
 		select {
 		case r := <-runTime:
 			report = append(report, r)
-			fmt.Println(r)
+			switch {
+			case r < min || n == 0:
+				min = r
+			case r > max:
+				max = r
+			}
+			sum += r
+			n++
 		case <-done:
 			fmt.Println(report)
-			fmt.Println("save the results")
+			b.Lock()
+			b.log.runs[q.Name] = Stats{min, sum / n, max, std(report, sum/n, n)}
+			fmt.Println("results readt")
+			fmt.Println(b.log.runs[q.Name])
+			b.Unlock()
 			return
 		}
+	}
+}
+
+func std(r []float64, avg float64, n float64) float64 {
+	var sum float64
+	for _, f := range r {
+		sum += (f - avg) * (f - avg)
+	}
+	sum = sum / n
+	return math.Sqrt(sum)
+}
+
+func (b *Bench) save() {
+	fmt.Println(b.log)
+	if b.config.Logs.Csv != "" {
+		fmt.Println("saving into", b.config.Logs.Csv)
+	}
+	if b.config.Logs.Datadog != "" {
+		fmt.Println("send data to", b.config.Logs.Datadog)
 	}
 }

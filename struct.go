@@ -1,5 +1,9 @@
 package sqlbench
 
+import (
+	"sync"
+)
+
 // Config specifies the setup for benchmarks
 type Config struct {
 	Tags    []Tag   `json:"tags"`
@@ -45,21 +49,18 @@ type Bench struct {
 	config Config
 	wait   chan bool
 	runner
-	tags []Tag
+	log
+	sync.Mutex
 }
 
 // Stats is collections data we collect for each query run
 type Stats struct {
 	// Minimum runtime
-	Min, Max, Avg, Stdv float64
-	XTags               []struct {
-		Name  string
-		Value string
-	}
+	Min, Avg, Max, Stdv float64
 }
 
 // Log of total exection and also queries benchmarks
-type Log struct {
-	Query map[string]Stats
-	Runs  map[string]([]Stats)
+type log struct {
+	tags []Tag
+	runs map[string]Stats
 }
