@@ -27,13 +27,9 @@ func (b *Bench) start() {
 	b.tag()
 
 	all := sync.WaitGroup{}
-	fmt.Println(b.config.Queries)
 	for _, query := range b.config.Queries {
-		fmt.Println("saw:", query.Name)
-
 		all.Add(1)
 		go func(q Query) {
-			fmt.Println("bench:", q.Name)
 			b.benchmarkQuery(q)
 			all.Done()
 		}(query)
@@ -130,39 +126,37 @@ func std(r []float64, avg float64, n float64) float64 {
 
 func (b *Bench) save() {
 	if b.config.Logs.Csv != "" {
-		var tags []string
-		var header []string
-		for _, t := range b.tags {
-			tags = append(tags, t.Value)
-			header = append(header, t.Name)
-		}
-
-		header = append(header, []string{"query", "Min", "Avg", "Max", "Stdv"}...)
-		var line []string
-		for k, v := range b.runLog.runs {
-			line = append(line, tags...)
-			line = append(line, k)
-			line = append(line, strconv.FormatFloat(v.Min, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Avg, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Max, 'f', 8, 64))
-			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 8, 64))
-		}
-
-		fmt.Println("saving", line)
 		fmt.Println("into", b.config.Logs.Csv)
-
 		f, err := os.OpenFile(b.config.Logs.Csv, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		defer f.Close()
 
+		var header []string
+		var tags []string
+		for _, t := range b.tags {
+			tags = append(tags, t.Value)
+			header = append(header, t.Name)
+		}
+		header = append(header, []string{"query", "Min", "Avg", "Max", "Stdv"}...)
+
 		w := csv.NewWriter(f)
 		stat, _ := f.Stat()
 		if stat.Size() == 0 {
 			w.Write(header)
 		}
-		w.Write(line)
+
+		for k, v := range b.runLog.runs {
+			var line []string
+			line = append(line, tags...)
+			line = append(line, k)
+			line = append(line, strconv.FormatFloat(v.Min, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Avg, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Max, 'f', 8, 64))
+			line = append(line, strconv.FormatFloat(v.Stdv, 'f', 8, 64))
+			w.Write(line)
+		}
 
 		w.Flush()
 	}
