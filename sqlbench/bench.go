@@ -7,8 +7,11 @@ import (
 	"time"
 )
 
-func (b *Bench) start() {
-	b.tag()
+func (b *Bench) start() error {
+	err := b.tag()
+	if err != nil {
+		return err
+	}
 
 	all := sync.WaitGroup{}
 	for _, q := range b.config.Queries {
@@ -26,16 +29,21 @@ func (b *Bench) start() {
 		time.Sleep(time.Second)
 		b.wait <- true
 	}()
+	return nil
 }
 
-func (b *Bench) tag() {
+func (b *Bench) tag() error {
 	var tags []Tag
 	for i, t := range b.config.Tags {
 		switch {
 		case t.Value == "timestamp":
 			tags = append(tags, Tag{b.config.Tags[i].Name, time.Now().Format("2006-01-02 15:04:05")})
 		default:
-			tags = append(tags, Tag{b.config.Tags[i].Name, "test"})
+			value, err := b.runner.tag(b.config.Tags[i].Value)
+			if err != nil {
+				return err
+			}
+			tags = append(tags, Tag{b.config.Tags[i].Name, value})
 		}
 	}
 	b.runLog.tags = tags
@@ -56,7 +64,7 @@ func (b *Bench) benchmarkQuery(q Query) {
 				all.Add(1)
 				go func() {
 					t := time.Now().UnixNano()
-					b.run(b.config.Db, q.Query)
+					b.run(q.Query)
 					runTime <- float64(time.Now().UnixNano()-t) / 1000000
 					all.Done()
 				}()

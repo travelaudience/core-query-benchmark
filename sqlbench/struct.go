@@ -41,7 +41,8 @@ type Query struct {
 }
 
 type runner interface {
-	run(string, string) error
+	run(string) error
+	tag(string) (string, error)
 }
 
 // Bench is the structure which encapsulated the required methods for running benchmark.

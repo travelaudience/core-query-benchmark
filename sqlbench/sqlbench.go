@@ -16,7 +16,7 @@ func New(configFile string) (Bench, error) {
 		return b, err
 	}
 
-	b.runner = &sqlRunner{}
+	b.runner = &sqlRunner{dsn: b.config.Db}
 	return b, nil
 }
 
