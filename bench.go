@@ -49,7 +49,7 @@ func (b *Bench) tag() {
 		default:
 			value, err := b.runner.tag(b.config.Tags[i].Value)
 			if err != nil {
-				log.Println(err)
+				log.Panicln(err)
 				return
 			}
 			tags = append(tags, Tag{b.config.Tags[i].Name, value})
@@ -76,7 +76,7 @@ func (b *Bench) benchmarkQuery(q Query) {
 					t := time.Now().UnixNano()
 					err := b.run(q.Query)
 					if err != nil {
-						log.Println(err)
+						log.Panicln(err)
 					}
 					runTime <- float64(time.Now().UnixNano()-t) / 1000000
 					all.Done()
@@ -135,7 +135,7 @@ func (b *Bench) save() {
 		fmt.Println("into", b.config.Logs.Csv)
 		f, err := os.OpenFile(b.config.Logs.Csv, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 		if err != nil {
-			log.Fatalln(err)
+			log.Panicln(err)
 		}
 		defer f.Close()
 

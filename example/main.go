@@ -14,7 +14,7 @@ func main() {
 
 	b, e := sqlbench.New(*config)
 	if e != nil {
-		log.Fatal(e)
+		log.Panicln(e)
 	}
 	wait := b.Start()
 	<-wait
