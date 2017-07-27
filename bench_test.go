@@ -37,7 +37,7 @@ func TestBench_Start(t *testing.T) {
 
 	select {
 	case <-wait:
-	case <-time.After(time.Second * 2):
+	case <-time.After(time.Second):
 		t.Error("Benchmark did not finish")
 	}
 }
