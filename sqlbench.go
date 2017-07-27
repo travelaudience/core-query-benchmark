@@ -28,7 +28,6 @@ func New(configFile string) (*Bench, error) {
 func config(fn string) (Config, error) {
 	c := Config{}
 	dat, err := ioutil.ReadFile(fn)
-
 	if err != nil {
 		return c, err
 	}

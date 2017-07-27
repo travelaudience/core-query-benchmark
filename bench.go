@@ -119,7 +119,7 @@ func (b *Bench) benchmarkQuery(q Query) {
 func pct(r []float64, pct float64) float64 {
 	sort.Float64s(r)
 	k := math.Ceil(float64(len(r)) * pct / 100)
-	return r[int(k)]
+	return r[int(k-1)]
 }
 func std(r []float64, avg float64, n float64) float64 {
 	var sum float64
