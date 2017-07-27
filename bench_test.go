@@ -1,6 +1,7 @@
 package sqlbench
 
 import (
+	"io/ioutil"
 	"testing"
 	"time"
 )
@@ -33,11 +34,21 @@ func getBenchTest(t *testing.T) *Bench {
 func TestBench_Start(t *testing.T) {
 	b := getBenchTest(t)
 
-	wait := b.Start()
+	tmpfile, err := ioutil.TempFile("", "example")
+	if err != nil {
+		t.Error("can't create the temp file")
+	}
+	b.config.Logs.Csv = tmpfile.Name()
 
+	wait := b.Start()
 	select {
 	case <-wait:
 	case <-time.After(time.Second):
 		t.Error("Benchmark did not finish")
+	}
+
+	fStat, _ := tmpfile.Stat()
+	if fStat.Size() == 0 {
+		t.Error("No data in log file")
 	}
 }
