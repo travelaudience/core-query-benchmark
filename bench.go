@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -27,15 +28,37 @@ func (b *Bench) start() {
 	defer func() { b.wait <- true }()
 	b.tag()
 
-	all := sync.WaitGroup{}
+	var m sync.Map
+	done := make(chan bool)
+	var count int32
 	for _, query := range b.config.Queries {
-		all.Add(1)
+		m.Store(query.Name, 1)
+		atomic.AddInt32(&count, 1)
 		go func(q Query) {
 			b.benchmarkQuery(q)
-			all.Done()
+			m.Store(q.Name, 0)
+			atomic.AddInt32(&count, -1)
+			if atomic.LoadInt32(&count) == 0 {
+				done <- true
+			}
 		}(query)
 	}
-	all.Wait()
+
+	for c := true; c == true; {
+		select {
+		case <-time.After(time.Second * 5):
+			var s string
+			m.Range(func(k, v interface{}) bool {
+				if v.(int) == 1 {
+					s += k.(string) + ", "
+				}
+				return true
+			})
+			log.Println("still running: ", s)
+		case <-done:
+			c = false
+		}
+	}
 
 	b.save()
 }
@@ -76,7 +99,7 @@ func (b *Bench) benchmarkQuery(q Query) {
 					t := time.Now().UnixNano()
 					err := b.run(q.Query)
 					if err != nil {
-						log.Panicln(err)
+						log.Panicln("error while running", q.Name, err)
 					}
 					runTime <- float64(time.Now().UnixNano()-t) / 1000000
 					all.Done()
