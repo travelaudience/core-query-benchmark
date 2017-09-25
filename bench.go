@@ -47,13 +47,19 @@ func (b *Bench) start() {
 	for c := true; c == true; {
 		select {
 		case <-time.After(time.Second * 5):
+			var l []string
 			var s string
 			m.Range(func(k, v interface{}) bool {
 				if v.(int) == 1 {
-					s += k.(string) + ", "
+					l = append(l, k.(string))
 				}
 				return true
 			})
+			sort.Strings(l)
+			for _, v := range l {
+				s += v + ", "
+			}
+
 			log.Println("still running: ", s)
 		case <-done:
 			c = false
